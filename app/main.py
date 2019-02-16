@@ -33,5 +33,47 @@ def logout():
   return redirect(url_for('calculate'))  # Calculate is the fn name above!
 
 
+
+@app.route('/windchill', methods=['GET','POST'])
+def windChill():
+  temp = ""
+  speed = ""
+  chill = ""
+  isF = True
+  isC = False
+
+  if request.method == 'POST':
+    temp = request.form['temp']
+    speed = request.form['speed']
+    isF = request.form.get('unitF')
+    isC = request.form.get('unitC')
+    if (isC):
+      chill = toCelsius(calcWindChill(toFahrenheit(float(temp)), float(speed)))
+    else:
+      chill = calcWindChill(float(temp), float(speed))
+
+  return render_template('windchill.html', temp = temp, speed = speed, chill = chill, isF = isF, isC = isC)
+
+
+def mphToMetersPerSec(mph):
+  return 0.44704 * mph
+
+def mpsToMph(mps): 
+  return 2.23694 * mps
+
+def ktsToMph(kts):
+  return 1.1507794 * kts
+
+def toFahrenheit(celsius):
+  return 32 + (celsius * 9.0 / 5.0)
+
+def toCelsius(fahrenheit):
+  return (fahrenheit - 32) * 5.0 / 9.0
+
+def calcWindChill(T, Wind):
+  return (35.74 + (0.6215 * T) - (35.75 *   Wind**0.16) + (0.4275 * T * Wind**0.16))
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')  # Enable on all devices so Docker works!
