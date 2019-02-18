@@ -1,7 +1,7 @@
 import os
 
 
-from flask import Flask, request, redirect, render_template, session, url_for, g
+from flask import Flask, request, redirect, render_template, session, url_for, g, jsonify
 
 app = Flask(__name__)
 app.config.from_mapping(SECRET_KEY='devIAm')  # Needed for session tracking
@@ -38,31 +38,50 @@ def logout():
 def windChill():
   temp = ""
   speed = ""
-  chill = ""
-  isF = True
-  isC = False
+  chill = None
+  tempUnit = None
 
   if request.method == 'POST':
-    temp = request.form['temp']
-    speed = request.form['speed']
-    isF = request.form.get('unitF')
-    isC = request.form.get('unitC')
-    if (isC):
-      chill = toCelsius(calcWindChill(toFahrenheit(float(temp)), float(speed)))
+    # when method is post and a json body is sent, respond with a json object
+    if request.headers['Content-type'] == 'application/json':
+      calcData = request.get_json()
+      temp = float(calcData.get("temp"))
+      tempUnit = str(calcData.get("tempUnit"))
+      speed = float(calcData.get("speed"))
+      speedUnit = str(calcData.get("speedUnit"))
+      if speedUnit == "kmh":
+        speed = kmhToMph(speed)
+      if tempUnit == "c":
+        chill = toCelsius(calcWindChill(toFahrenheit(temp), speed))
+      else:
+        chill = calcWindChill(temp, speed)
+      return jsonify(tempUnit=tempUnit, chill = chill)
+
+    temp = float(request.form["temp"])
+    tempUnit = str(request.form["tempUnit"])
+    speed = float(request.form["speed"])
+    speedUnit = str(request.form["speedUnit"])
+
+    if speedUnit == "kmh":
+      speed = kmhToMph(speed)
+
+    if tempUnit == "c":
+      chill = toCelsius(calcWindChill(toFahrenheit(temp), speed))
     else:
-      chill = calcWindChill(float(temp), float(speed))
+      chill = calcWindChill(temp, speed)
+    # if (isC):
+    #   chill = toCelsius(calcWindChill(toFahrenheit(float(temp)), float(speed)))
+    # else:
+    #   chill = calcWindChill(float(temp), float(speed))
 
-  return render_template('windchill.html', temp = temp, speed = speed, chill = chill, isF = isF, isC = isC)
+  return render_template('windchill.html', temp = temp, speed = speed, chill = chill, tempUnit = tempUnit)
 
 
-def mphToMetersPerSec(mph):
-  return 0.44704 * mph
+def kmhToMph(kmh):
+  return kmh / 1.609
 
-def mpsToMph(mps): 
-  return 2.23694 * mps
-
-def ktsToMph(kts):
-  return 1.1507794 * kts
+def mphToKmh(mph):
+  return mph * 1.60934
 
 def toFahrenheit(celsius):
   return 32 + (celsius * 9.0 / 5.0)
@@ -71,7 +90,7 @@ def toCelsius(fahrenheit):
   return (fahrenheit - 32) * 5.0 / 9.0
 
 def calcWindChill(T, Wind):
-  return (35.74 + (0.6215 * T) - (35.75 *   Wind**0.16) + (0.4275 * T * Wind**0.16))
+  return (35.74 + (0.6215 * T) - (35.75 * Wind**0.16) + (0.4275 * T * Wind**0.16))
 
 
 

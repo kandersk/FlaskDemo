@@ -15,20 +15,28 @@
       <label for="temp">Temp:</label>
       <input name="temp" id="temp" value="{{ temp }}" required>
 
-      <label for="unitF">F</label>
-      <input type="checkbox" name="unitF" id="unitF" {% if isF %} checked {% endif %}>
-
-      <label for="unitC">C</label>
-      <input type="checkbox" name="unitC" id="unitC" {% if isC %} checked {% endif %}>
+      <select name="tempUnit">
+        <option value = "f">F</option>
+        <option value = "c">C</option>
+      </select>
     </div>
 
-    <label for="speed">Speed:</label>
-    <input name="speed" id="speed" value="{{ speed }}" required> <br>
-    
-    <label for="chill">Chill:</label>
-    <input name="chill" id="chiill" value="{{ chill }}"> <br>
-    
+    <div class="Speed">
+      <label for="speed">Speed:</label>
+      <input name="speed" id="speed" value="{{ speed }}" required>
+      <select name="speedUnit">
+        <option value = "mph">mph</option>
+        <option value = "kmh">km/h</option>
+      </select>
+    </div>
     <input type="submit" value="Submit">
+
+    {% if chill != None %}
+      <div class="Result">
+        <h3>Windchill = {{ chill }} {{ tempUnit }}</h3>
+      </div>
+    {% endif %}
+
   </form>
   {% endblock %}
 </body>
